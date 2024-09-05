@@ -19,8 +19,8 @@ This project uses Apache Airflow to anonymize large CSV files in chunks. The ano
 
 2. Start the data pipeline:
     ```sh
-    make up
-    make ci
+    make up   # Sets up and starts the Airflow containers
+    make ci   # Runs all checks (formatting, linting, type checks, tests)
     ```
 
 3. Access the Airflow UI:
