@@ -39,6 +39,7 @@ This project uses Apache Airflow to anonymize large CSV files in chunks. The ano
 ## Usage
 
 - To generate a dataset with 100,000 rows, first run the `generate_fake_data` DAG. Once the data is generated, execute the `anonymize_large_csv_chunked` DAG to anonymize sensitive fields by hashing.
+- The anonymized data will be saved in the `data/` directory.
 
 - If you prefer to work with a smaller sample, a CSV file containing 10 rows is already available at `data/big_fake_data.csv`.
 

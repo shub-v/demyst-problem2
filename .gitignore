@@ -31,3 +31,4 @@ __MACOSX
 *.pem
 
 
+/data/anonymized_large_data.csv
