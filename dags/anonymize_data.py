@@ -26,7 +26,7 @@ def anonymize(value: str) -> str:
 # Function to read a chunk of data from a CSV file
 def read_chunk(file_path: str, start_row: int, end_row: int) -> List[Dict[str, str]]:
     chunk_data = []
-    with open(file_path, mode="r") as infile:
+    with open(file_path, mode="r", encoding="windows-1252") as infile:
         reader = csv.DictReader(infile)
         for i, row in enumerate(reader):
             if i < start_row:
@@ -43,7 +43,9 @@ def write_chunk(
 ) -> None:
     if not chunk_data:
         return  # Skip writing if chunk_data is empty
-    with open(output_csv_file, mode="a", newline="") as outfile:
+    with open(
+        output_csv_file, mode="a", newline="", encoding="windows-1252"
+    ) as outfile:
         writer = csv.DictWriter(outfile, fieldnames=chunk_data[0].keys())
         if write_header:
             writer.writeheader()
@@ -100,7 +102,7 @@ with DAG(
     "anonymize_large_csv_chunked",
     default_args=default_args,
     description="Anonymize large CSV file in chunks",
-    schedule_interval=timedelta(days=1),
+    schedule_interval=None,
     start_date=datetime(2024, 9, 4),
     catchup=False,
 ) as dag:

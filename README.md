@@ -28,6 +28,13 @@ This project uses Apache Airflow to anonymize large CSV files in chunks. The ano
     - Username: `airflow`
     - Password: `airflow`
 
+## Architecture
+
+- **Airflow**: To schedule and orchestrate DAGs.
+- **Postgres**: To store metadata and logs.
+- **Docker**: To containerize the Airflow environment.
+
+
 ## Project Structure
 
 - **DAGs**: The DAGs for the project are defined in the `dags` directory.
@@ -35,6 +42,9 @@ This project uses Apache Airflow to anonymize large CSV files in chunks. The ano
   - **`dags/generate_fake_data.py`**: Contains the DAG and functions to generate fake data and save it as a CSV file.
 - **Makefile**: Contains various commands to manage the project.
 - **Tests**: Located in the `tests` directory.
+
+The `anonymize_large_csv_chunked` DAG in the Airflow UI will look like the below image:
+![Project Architecture](assets/img.png)
 
 ## Usage
 

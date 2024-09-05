@@ -14,7 +14,7 @@ fake = faker.Faker()
 # Function to generate fake data in batches and save it as a CSV
 def generate_big_data_csv(num_records, batch_size, filename):
     # Open the file in write mode
-    with open(filename, mode="w", newline="") as file:
+    with open(filename, mode="w", newline="", encoding="windows-1252") as file:
         writer = csv.writer(file)
         # Write the header row
         writer.writerow(["first_name", "last_name", "address", "date_of_birth"])
@@ -53,7 +53,7 @@ with DAG(
     "generate_fake_data",
     default_args=default_args,
     description="Generate fake data CSV in batches",
-    schedule_interval=timedelta(days=1),
+    schedule_interval=None,
     start_date=datetime(2024, 9, 3),
     catchup=False,
 ) as dag:
