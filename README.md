@@ -36,6 +36,12 @@ This project uses Apache Airflow to anonymize large CSV files in chunks. The ano
 - **Makefile**: Contains various commands to manage the project.
 - **Tests**: Located in the `tests` directory.
 
+## Usage
+
+- To generate a dataset with 100,000 rows, first run the `generate_fake_data` DAG. Once the data is generated, execute the `anonymize_large_csv_chunked` DAG to anonymize sensitive fields by hashing.
+
+- If you prefer to work with a smaller sample, a CSV file containing 10 rows is already available at `data/big_fake_data.csv`.
+
 ## Makefile Commands
 
 - **Setup Containers**:
