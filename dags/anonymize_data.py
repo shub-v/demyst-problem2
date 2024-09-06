@@ -4,10 +4,11 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List
 
-from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.task_group import TaskGroup
+
+from airflow import DAG
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,13 +19,31 @@ output_csv_file: str = "/opt/airflow/data/anonymized_large_data.csv"
 chunk_size: int = 10000  # Adjust chunk size based on memory capacity
 
 
-# Function to anonymize a given value using SHA-256
 def anonymize(value: str) -> str:
+    """
+    Anonymize a given value using SHA-256.
+
+    Args:
+        value (str): The value to be anonymized.
+
+    Returns:
+        str: The anonymized value.
+    """
     return hashlib.sha256(value.encode()).hexdigest()
 
 
-# Function to read a chunk of data from a CSV file
 def read_chunk(file_path: str, start_row: int, end_row: int) -> List[Dict[str, str]]:
+    """
+    Read a chunk of data from a CSV file.
+
+    Args:
+        file_path (str): The path to the CSV file.
+        start_row (int): The starting row index.
+        end_row (int): The ending row index.
+
+    Returns:
+        List[Dict[str, str]]: A list of dictionaries representing the chunk of data.
+    """
     chunk_data = []
     with open(file_path, mode="r", encoding="windows-1252") as infile:
         reader = csv.DictReader(infile)
@@ -37,10 +56,17 @@ def read_chunk(file_path: str, start_row: int, end_row: int) -> List[Dict[str, s
     return chunk_data
 
 
-# Function to write a chunk of data to a CSV file
 def write_chunk(
     output_csv_file: str, chunk_data: List[Dict[str, str]], write_header: bool = False
 ) -> None:
+    """
+    Write a chunk of data to a CSV file.
+
+    Args:
+        output_csv_file (str): The path to the output CSV file.
+        chunk_data (List[Dict[str, str]]): The chunk of data to be written.
+        write_header (bool): Whether to write the header row. Defaults to False.
+    """
     if not chunk_data:
         return  # Skip writing if chunk_data is empty
     with open(
@@ -52,8 +78,16 @@ def write_chunk(
         writer.writerows(chunk_data)
 
 
-# Function to process a chunk of data by anonymizing specific fields
 def process_chunk(chunk_data: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """
+    Process a chunk of data by anonymizing specific fields.
+
+    Args:
+        chunk_data (List[Dict[str, str]]): The chunk of data to be processed.
+
+    Returns:
+        List[Dict[str, str]]: The processed chunk of data with anonymized fields.
+    """
     anonymized_data = []
     for row in chunk_data:
         row["first_name"] = anonymize(row["first_name"])
@@ -61,6 +95,43 @@ def process_chunk(chunk_data: List[Dict[str, str]]) -> List[Dict[str, str]]:
         row["address"] = anonymize(row["address"])
         anonymized_data.append(row)
     return anonymized_data
+
+
+def calculate_num_chunks(file_path: str, chunk_size: int) -> int:
+    """
+    Calculate the number of chunks by reading the number of rows in the CSV.
+
+    Args:
+        file_path (str): The path to the CSV file.
+        chunk_size (int): The size of each chunk.
+
+    Returns:
+        int: The number of chunks.
+    """
+    with open(file_path, mode="r") as infile:
+        reader = csv.reader(infile)
+        total_rows = sum(1 for row in reader) - 1  # Exclude header
+    num_chunks = (total_rows // chunk_size) + 1
+    return num_chunks
+
+
+def process_and_write_chunk(
+    file_path: str, chunk_number: int, chunk_size: int, output_csv_file: str
+) -> None:
+    """
+    Process and write a chunk of data.
+
+    Args:
+        file_path (str): The path to the input CSV file.
+        chunk_number (int): The chunk number to be processed.
+        chunk_size (int): The size of each chunk.
+        output_csv_file (str): The path to the output CSV file.
+    """
+    start_row = chunk_number * chunk_size
+    end_row = start_row + chunk_size
+    chunk_data = read_chunk(file_path, start_row, end_row)
+    anonymized_data = process_chunk(chunk_data)
+    write_chunk(output_csv_file, anonymized_data, write_header=(chunk_number == 0))
 
 
 # Default arguments for the Airflow DAG
@@ -73,29 +144,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-
-# Function to calculate the number of chunks by reading the number of rows in the CSV
-def calculate_num_chunks(file_path: str, chunk_size: int) -> int:
-    with open(file_path, mode="r") as infile:
-        reader = csv.reader(infile)
-        total_rows = sum(1 for row in reader) - 1  # Exclude header
-    num_chunks = (total_rows // chunk_size) + 1
-    return num_chunks
-
-
 num_chunks: int = calculate_num_chunks(file_path, chunk_size)
-
-
-# Function to process and write a chunk of data
-def process_and_write_chunk(
-    file_path: str, chunk_number: int, chunk_size: int, output_csv_file: str
-) -> None:
-    start_row = chunk_number * chunk_size
-    end_row = start_row + chunk_size
-    chunk_data = read_chunk(file_path, start_row, end_row)
-    anonymized_data = process_chunk(chunk_data)
-    write_chunk(output_csv_file, anonymized_data, write_header=(chunk_number == 0))
-
 
 # Define the Airflow DAG
 with DAG(
